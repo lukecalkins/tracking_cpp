@@ -1,0 +1,24 @@
+{
+  "name" : "tracking",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "3421943bfdef53a1d16404e98b5b487112c59df2",
+  "dependencies" : [ {
+    "name" : "armadillo",
+    "version>=" : "14.4.1"
+  }, {
+    "name" : "blas",
+    "version>=" : "2023-04-14#3"
+  }, {
+    "name" : "lapack",
+    "version>=" : "2023-06-10#2"
+  }, {
+    "name" : "vcpkg-cmake-config",
+    "version>=" : "2024-05-23"
+  }, {
+    "name" : "vcpkg-cmake",
+    "version>=" : "2024-04-23"
+  }, {
+    "name" : "nlohmann-json",
+    "version>=" : "3.12.0"
+  } ]
+}

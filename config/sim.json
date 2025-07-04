@@ -1,0 +1,5 @@
+{
+  "sensor_file": "/Users/lukecalkins/CLionProjects/Tracking/config/sensor.json",
+  "output_log": "/Users/lukecalkins/CLionProjects/Tracking/data/output_log.txt",
+  "steps": 100
+}
