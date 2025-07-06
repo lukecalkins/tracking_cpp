@@ -16,6 +16,8 @@ public:
 
     virtual void forward_simulate(const int T) = 0;
 
+    virtual arma::vec get_state() const = 0;
+
     virtual ~Target() = default;
 };
 
@@ -33,7 +35,7 @@ public:
         x_t = new_state;
     }
 
-    arma::vec get_state() const {
+    arma::vec get_state() const override{
         return x_t;
     }
 

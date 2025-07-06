@@ -18,12 +18,16 @@ using json = nlohmann::json;
 class Parameters {
 
     std::string sim_json;
-    std:: string output_path;
+    std:: string outputFilename;
+    std::ofstream outputFile;
     std::shared_ptr<Sensor> sensor;
     std::shared_ptr<Target> target;
+    bool logging;
+    unsigned int num_steps;
+    double sampling_period;
 
 public:
-    Parameters(std::string &sim_json, std::string &output_path): sim_json(sim_json), output_path(output_path) {
+    explicit Parameters(std::string &sim_json): sim_json(sim_json) {
 
         std::ifstream f(sim_json);
         json data = json::parse(f);
@@ -46,10 +50,35 @@ public:
         json target_data = json::parse(h);
         std::cout << target_data << std::endl;
 
+        bool logging_enabled = data["logging"];
+        outputFilename = data["output_log"];
+        num_steps = data["steps"];
+        sampling_period = data["sampling_period"];
 
-
+        logging = logging_enabled;
         sensor = build_sensor(sensor_data, data);
         target = build_target(target_data, data);
+
+        if (logging) {
+            outputFile.open(outputFilename, std::ios::out);
+        }
+    }
+
+    void write_to_log(const double &measurement, const arma::vec &target_state, const arma::vec &ownship_state) {
+        if (outputFile.is_open()) {
+            outputFile << "Measurement: " << measurement << std::endl << "Target: " << target_state << std::endl <<
+                "Ownship state: " << ownship_state << std::endl;
+        } else {
+            std::cerr << "Error opening file" << std::endl;
+        }
+    }
+
+    unsigned int get_num_steps() const {
+        return num_steps;
+    }
+
+    double get_sampling_period() const {
+        return sampling_period;
     }
 
     static std::shared_ptr<Sensor> build_sensor(const json &sensor_json, const json &sim_json) {
@@ -59,7 +88,7 @@ public:
             double b_sigma = sensor_json["noise"];
             std::string output_log = sim_json["output_log"];
             bool logging = sim_json["logging"];
-            sensor = std::make_shared<BearingSensor>(b_sigma, output_log, true);
+            sensor = std::make_shared<BearingSensor>(b_sigma);
         }
 
         return sensor;
@@ -89,7 +118,7 @@ public:
                 x_init(i) = static_cast<double>(element);
                 i++;
             }
-            std::cout << x_init << std::endl;
+            target = std::make_shared<Target2DLinear>(0, x_init, A, W);
         }
 
         return target;
@@ -97,6 +126,10 @@ public:
 
     std::shared_ptr<Target> get_target() {
         return target;
+    }
+
+    bool is_logging_enabled() const {
+        return logging;
     }
 
 

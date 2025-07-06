@@ -12,10 +12,8 @@
 #include <cmath>
 
 class Sensor {
-protected:
-    std::ofstream logFile;
+
 public:
-    explicit Sensor(const std::string &output_log): logFile(output_log){}
 
     [[nodiscard]] virtual arma::vec observation_model(const arma::vec &x_t, const arma::vec &p_t) const = 0;
 
@@ -34,7 +32,7 @@ class BearingSensor final : public Sensor {
     bool logging;
 
 public:
-    explicit BearingSensor(const double b_sigma, std::string &output_log, bool logging = false) : Sensor(output_log),
+    explicit BearingSensor(const double b_sigma, bool logging = false) :
                                                    b_sigma(b_sigma),
                                                    distribution(0, b_sigma * M_PI / 180),
                                                    generator(std::random_device{}()),
@@ -55,16 +53,6 @@ public:
         arma::vec bearing = observation_model(x_t, p_t);
         const double noise_sample = distribution(generator);
         double measurement = bearing[0] + noise_sample;
-
-        if (logging) {
-            //std::cout << "Logging measurement: " << measurement << std::endl;
-            if (logFile.is_open()){
-                logFile << "Measurement: " << measurement << std::endl;
-            } else {
-                std::cerr << "Error: Unable to open log file." << std::endl;
-            }
-
-        }
 
         return measurement;
 

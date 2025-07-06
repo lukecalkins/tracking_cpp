@@ -3,20 +3,28 @@
 #include "KalmanFilter.h"
 #include "json.hpp"
 #include "sensor.h"
+#include "target.h"
+#include "params.h"
 // TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 int main() {
 
-    // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the <b>lang</b> variable name to see how CLion can help you rename it.
+    std::string sim_file = "/Users/lukecalkins/CLionProjects/Tracking/config/sim.json";
+    Parameters p(sim_file);
 
-    arma::mat A(4, 4, arma::fill::eye);
-    arma::mat B(4, 4, arma::fill::randu);
+    std::shared_ptr<Sensor> sensor = p.get_sensor();
+    std::shared_ptr<Target> target = p.get_target();
+    arma::vec ownship = {0, 0, 0};
+    double measurement;
 
-    arma::vec x0(4, arma::fill::ones);
-    arma::mat Sigma0(4, 4, arma::fill::eye);
-
-    std::cout << A*B.t() << std::endl;
-    std::cout << A << std::endl;
-    std::cout << B << std::endl;
+    for (unsigned int i = 0; i < p.get_num_steps(); i++) {
+        target->forward_simulate(p.get_sampling_period());
+        measurement = sensor->get_measurement(target->get_state(), ownship);
+        if (p.is_logging_enabled()) {
+            //std::cout << "Logging measurement: " << measurement << std::endl
+            p.write_to_log(measurement, target->get_state(), ownship);
+            std::cout << "wrote log entry" << std::endl;
+        }
+    }
 
     return EXIT_SUCCESS;
     // TIP See CLion help at <a href="https://www.jetbrains.com/help/clion/">jetbrains.com/help/clion/</a>. Also, you can try interactive lessons for CLion by selecting 'Help | Learn IDE Features' from the main menu.
