@@ -15,7 +15,7 @@ class Sensor {
 protected:
     std::ofstream logFile;
 public:
-    explicit Sensor(const std::string &output_log): logFile(output_log, std::ios::app){}
+    explicit Sensor(const std::string &output_log): logFile(output_log){}
 
     [[nodiscard]] virtual arma::vec observation_model(const arma::vec &x_t, const arma::vec &p_t) const = 0;
 
@@ -57,7 +57,7 @@ public:
         double measurement = bearing[0] + noise_sample;
 
         if (logging) {
-            std::cout << "Logging measurement: " << measurement << std::endl;
+            //std::cout << "Logging measurement: " << measurement << std::endl;
             if (logFile.is_open()){
                 logFile << "Measurement: " << measurement << std::endl;
             } else {
@@ -70,7 +70,7 @@ public:
 
     };
 
-    ~BearingSensor() override= default;
+    ~BearingSensor() override = default;
 };
 
 #endif //SENSOR_H
