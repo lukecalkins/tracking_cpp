@@ -12,6 +12,7 @@
 #include "json.hpp"
 #include "sensor.h"
 #include "target.h"
+#include "utils.h"
 
 using json = nlohmann::json;
 
@@ -66,8 +67,11 @@ public:
 
     void write_to_log(const double &measurement, const arma::vec &target_state, const arma::vec &ownship_state) {
         if (outputFile.is_open()) {
-            outputFile << "Measurement: " << measurement << std::endl << "Target: " << target_state << std::endl <<
-                "Ownship state: " << ownship_state << std::endl;
+            outputFile << "Measurement: " << measurement << std::endl;
+            outputFile << "target: ";
+            print_arma_vec(target_state, outputFile);
+            outputFile << "ownship: ";
+            print_arma_vec(ownship_state, outputFile);
         } else {
             std::cerr << "Error opening file" << std::endl;
         }
