@@ -1,6 +1,6 @@
 #include <iostream>
 #include "armadillo"
-#include "KalmanFilter.h"
+#include "tracker.h"
 #include "json.hpp"
 #include "sensor.h"
 #include "target.h"
@@ -13,12 +13,12 @@ int main() {
 
     std::shared_ptr<Sensor> sensor = p.get_sensor();
     std::shared_ptr<Target> target = p.get_target();
-    arma::vec ownship = {0, 0, 0};
-    double measurement;
+    std::shared_ptr<Tracker> tracker = p.get_tracker();
+    const arma::vec ownship = {0, 0, 0};
 
     for (unsigned int i = 0; i < p.get_num_steps(); i++) {
         target->forward_simulate(p.get_sampling_period());
-        measurement = sensor->get_measurement(target->get_state(), ownship);
+        double measurement = sensor->get_measurement(target->get_state(), ownship);
         if (p.is_logging_enabled()) {
             //std::cout << "Logging measurement: " << measurement << std::endl
             p.write_to_log(measurement, target->get_state(), ownship);

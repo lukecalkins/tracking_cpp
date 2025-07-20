@@ -18,10 +18,18 @@ public:
 
     virtual arma::vec get_state() const = 0;
 
+    unsigned int get_x_dim() const {
+        return x_dim;
+    }
+
+    unsigned int get_ID() const {
+        return ID;
+    }
+
     virtual ~Target() = default;
 };
 
-class Target2DLinear final:  public Target {
+class Target2DLinear :  public Target {
 
     arma::vec x_t;
     arma::mat A;

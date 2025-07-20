@@ -13,6 +13,7 @@
 #include "sensor.h"
 #include "target.h"
 #include "utils.h"
+#include "tracker.h"
 
 using json = nlohmann::json;
 
@@ -23,6 +24,7 @@ class Parameters {
     std::ofstream outputFile;
     std::shared_ptr<Sensor> sensor;
     std::shared_ptr<Target> target;
+    std::shared_ptr<Tracker> tracker;
     bool logging;
     unsigned int num_steps;
     double sampling_period;
@@ -49,7 +51,13 @@ public:
         std::string target_config_file = data["target_file"];
         std::ifstream h(target_config_file);
         json target_data = json::parse(h);
-        std::cout << target_data << std::endl;
+        //std::cout << target_data << std::endl;
+
+        //parse tracker file
+        std::string tracker_config_file = data["tracker_file"];
+        std::ifstream k(tracker_config_file);
+        json tracker_data = json::parse(k);
+        //std::cout << tracker_data << std::endl;
 
         bool logging_enabled = data["logging"];
         outputFilename = data["output_log"];
@@ -59,6 +67,7 @@ public:
         logging = logging_enabled;
         sensor = build_sensor(sensor_data, data);
         target = build_target(target_data, data);
+        tracker = build_tracker(tracker_data, target_data, data);
 
         if (logging) {
             outputFile.open(outputFilename, std::ios::out);
@@ -84,6 +93,68 @@ public:
     double get_sampling_period() const {
         return sampling_period;
     }
+    static void construct_process_noise_cov(arma::mat &W, const double accel_dist, const double sampling_period) {
+        W(0, 0) = std::pow(sampling_period, 4.0) / 4.0;
+        W(1, 1) = std::pow(sampling_period, 4.0) / 4.0;
+        W(0, 2) = std::pow(sampling_period, 3.0) / 2.0;
+        W(1, 3) = std::pow(sampling_period, 3.0) / 2.0;
+        W(2, 0) = std::pow(sampling_period, 3.0) / 2.0;
+        W(3, 1) = std::pow(sampling_period, 3.0) / 2.0;
+        W(2, 2) = std::pow(sampling_period, 2.0);
+        W(3, 3) = std::pow(sampling_period, 2.0);
+
+        std::cout << "before:" << std::endl << W << std::endl;
+        std::cout << "accel dist = " << accel_dist << std::endl;
+        W = std::pow(accel_dist, 2) * W;
+        std::cout << "after:" << std::endl << W << std::endl;
+    }
+
+    std::shared_ptr<Tracker> build_tracker(const json &tracker_json, const json &target_json, const json &sim_json) {
+        std::shared_ptr<Tracker> tracker;
+        if (tracker_json["tracker_type"] == "EKF") {
+            if (tracker_json["use_target_initial_state"]) {
+
+                const double sampling_period = sim_json["sampling_period"];
+
+                //TODO generalize target_dim
+                arma::mat A(4, 4, arma::fill::eye);
+                A(0, 2) = sampling_period;
+                A(1, 3) = sampling_period;
+                std::cout << "Transition mat A: " << std::endl << A << std::endl;
+
+                //TODO add noise to state transition mat
+                double accel_dist = target_json["sigma_a"];
+                arma::mat W(4, 4, arma::fill::zeros);
+                construct_process_noise_cov(W, accel_dist, sampling_period);
+                std::cout << "Noise mat W: " << std::endl << W << std::endl;
+
+                //TODO add parsing of initial covariance
+                arma::mat init_cov(4, 4, arma::fill::zeros);
+                init_cov(0, 0) = 1;
+                init_cov(1, 1) = 1;
+
+                arma::vec x_init(4, 1);
+                std::cout << target_json["initial_state"] << std::endl;
+                std::cout << typeid(target_json["initial_state"]).name() << std::endl;
+                int i = 0;
+                for (const auto& element: target_json["initial_state"]) {
+                    x_init(i) = static_cast<double>(element);
+                    i++;
+                }
+
+                //create target belief
+                TargetLinear2DBelief init_info_target(1, x_init, A, W, init_cov);
+
+                tracker = std::make_shared<KalmanFilter>(init_info_target, sensor);
+            }
+        }
+
+        return tracker;
+    }
+
+    std::shared_ptr<Tracker> get_tracker() {
+        return tracker;
+    }
 
     static std::shared_ptr<Sensor> build_sensor(const json &sensor_json, const json &sim_json) {
 
@@ -107,10 +178,14 @@ public:
         std::shared_ptr<Target> target;
         if (target_json["target type"] == "linear_2d") {
             const double sampling_period = sim_json["sampling_period"];
+
+            //TODO generalize target_dim
             arma::mat A(4, 4, arma::fill::eye);
             A(0, 2) = sampling_period;
             A(1, 3) = sampling_period;
 
+
+            //TODO add noise to state transition mat
             arma::mat W(4, 4, arma::fill::eye);
 
             arma::vec x_init(4);
