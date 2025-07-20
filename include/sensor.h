@@ -20,9 +20,13 @@ public:
 
     [[nodiscard]] virtual arma::vec observation_model(const arma::vec &x_t, const arma::vec &p_t) const = 0;
 
-    virtual double get_measurement(const arma::vec &x_t, const arma::vec &p_t) = 0;
+    virtual arma::vec get_measurement(const arma::vec &x_t, const arma::vec &p_t) = 0;
 
     virtual void get_jacobian(arma::mat & H, arma::mat & V, const arma::vec &x_t, const arma::vec &p_t) = 0;
+
+    unsigned int get_z_dim() const {
+        return z_dim;
+    }
 
     virtual ~Sensor() = default;
 };
@@ -53,11 +57,11 @@ public:
         return bearing;
     }
 
-    double get_measurement(const arma::vec &x_t, const arma::vec &p_t) override {
+    arma::vec get_measurement(const arma::vec &x_t, const arma::vec &p_t) override {
 
         arma::vec bearing = observation_model(x_t, p_t);
-        const double noise_sample = distribution(generator);
-        double measurement = bearing[0] + noise_sample;
+        const arma::vec noise_sample = {distribution(generator)};
+        arma::vec measurement = bearing + noise_sample;
 
         return measurement;
 
@@ -72,6 +76,7 @@ public:
 
         V(0, 0) = std::pow(b_sigma, 2);
     }
+
 
     ~BearingSensor() override = default;
 };

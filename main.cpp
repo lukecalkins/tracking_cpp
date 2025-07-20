@@ -18,7 +18,8 @@ int main() {
 
     for (unsigned int i = 0; i < p.get_num_steps(); i++) {
         target->forward_simulate(p.get_sampling_period());
-        double measurement = sensor->get_measurement(target->get_state(), ownship);
+        arma::vec measurement = sensor->get_measurement(target->get_state(), ownship);
+        tracker->update_belief(measurement, ownship);
         if (p.is_logging_enabled()) {
             //std::cout << "Logging measurement: " << measurement << std::endl
             p.write_to_log(measurement, target->get_state(), ownship);
