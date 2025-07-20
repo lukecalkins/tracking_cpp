@@ -1,6 +1,8 @@
 {
   "target type": "linear_2d",
+  "target_dim": 4,
   "initial_state": [0, 1, 1, 0],
-  "initial_cov": [10, 1],
+  "initial_cov_pos": 10,
+  "initial_cov_vel": 1,
   "sigma_a" : 0.1
 }

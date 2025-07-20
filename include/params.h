@@ -32,32 +32,28 @@ class Parameters {
 public:
     explicit Parameters(std::string &sim_json): sim_json(sim_json) {
 
+        //Load top level file
         std::ifstream f(sim_json);
         json data = json::parse(f);
 
-        //Parse top level file for sensor data
-
-        std::cout << data["sensor_file"] << std::endl;
+        //Parse sensor file
         std::string sensor_config_file = data["sensor_file"];
         std::ifstream g(sensor_config_file);
         json sensor_data = json::parse(g);
-
-        //Parse sensor file
-        std::cout<< sensor_data << std::endl;
-        std::cout << "Sensor Noise = " << sensor_data["noise"] << std::endl;
-        std::cout << "Sensor Type = " << sensor_data["sensor type"] << std::endl;
+        std::cout << "Sensor noise = " << sensor_data["noise"] << std::endl;
+        std::cout << "Sensor type = " << sensor_data["sensor type"] << std::endl;
 
         //Parse target file
         std::string target_config_file = data["target_file"];
         std::ifstream h(target_config_file);
         json target_data = json::parse(h);
-        //std::cout << target_data << std::endl;
+        std::cout <<  "Target type: " << target_data["target type"] << std::endl;
 
         //parse tracker file
         std::string tracker_config_file = data["tracker_file"];
         std::ifstream k(tracker_config_file);
         json tracker_data = json::parse(k);
-        //std::cout << tracker_data << std::endl;
+        std::cout <<  "Tracker type: " << tracker_data["tracker type"] << std::endl;
 
         bool logging_enabled = data["logging"];
         outputFilename = data["output_log"];
@@ -103,39 +99,46 @@ public:
         W(2, 2) = std::pow(sampling_period, 2.0);
         W(3, 3) = std::pow(sampling_period, 2.0);
 
-        std::cout << "before:" << std::endl << W << std::endl;
-        std::cout << "accel dist = " << accel_dist << std::endl;
         W = std::pow(accel_dist, 2) * W;
-        std::cout << "after:" << std::endl << W << std::endl;
     }
 
+    static void construct_state_transition_mat(arma::mat &A, double sampling_period) {
+
+        // Assume A initialized outside this function as identity mat
+        A(0, 2) = sampling_period;
+        A(1, 3) = sampling_period;
+    }
+
+    static void construct_initial_target_covariance(arma::mat &Sigma, double init_cov_pos, double init_cov_vel) {
+        Sigma(0, 0) = init_cov_pos;
+        Sigma(1, 1) = init_cov_pos;
+        Sigma(2, 2) = init_cov_vel;
+        Sigma(3, 3) = init_cov_vel;
+    }
     std::shared_ptr<Tracker> build_tracker(const json &tracker_json, const json &target_json, const json &sim_json) {
         std::shared_ptr<Tracker> tracker;
-        if (tracker_json["tracker_type"] == "EKF") {
+        if (tracker_json["tracker type"] == "EKF") {
             if (tracker_json["use_target_initial_state"]) {
-
                 const double sampling_period = sim_json["sampling_period"];
 
-                //TODO generalize target_dim
-                arma::mat A(4, 4, arma::fill::eye);
-                A(0, 2) = sampling_period;
-                A(1, 3) = sampling_period;
-                std::cout << "Transition mat A: " << std::endl << A << std::endl;
+                int target_dim = target_json["target_dim"];
+                arma::mat A(target_dim, target_dim, arma::fill::eye);
+                construct_state_transition_mat(A, sampling_period);
+                std::cout << "Transition mat A in tracker: " << std::endl << A << std::endl;
 
-                //TODO add noise to state transition mat
                 double accel_dist = target_json["sigma_a"];
-                arma::mat W(4, 4, arma::fill::zeros);
+                arma::mat W(target_dim, target_dim, arma::fill::zeros);
                 construct_process_noise_cov(W, accel_dist, sampling_period);
                 std::cout << "Noise mat W: " << std::endl << W << std::endl;
 
-                //TODO add parsing of initial covariance
-                arma::mat init_cov(4, 4, arma::fill::zeros);
-                init_cov(0, 0) = 1;
-                init_cov(1, 1) = 1;
+                arma::mat init_cov(target_dim, target_dim, arma::fill::zeros);
+                double init_cov_pos = target_json["initial_cov_pos"];
+                double init_cov_vel = target_json["initial_cov_vel"];
+                construct_initial_target_covariance(init_cov, init_cov_pos, init_cov_vel);
+                std::cout << "Initial target covariance: " << std::endl << init_cov << std::endl;
 
-                arma::vec x_init(4, 1);
-                std::cout << target_json["initial_state"] << std::endl;
-                std::cout << typeid(target_json["initial_state"]).name() << std::endl;
+                arma::vec x_init(target_dim, 1);
+                std::cout << "Initial target state in tracker: " << target_json["initial_state"] << std::endl;
                 int i = 0;
                 for (const auto& element: target_json["initial_state"]) {
                     x_init(i) = static_cast<double>(element);
@@ -179,19 +182,17 @@ public:
         if (target_json["target type"] == "linear_2d") {
             const double sampling_period = sim_json["sampling_period"];
 
-            //TODO generalize target_dim
-            arma::mat A(4, 4, arma::fill::eye);
-            A(0, 2) = sampling_period;
-            A(1, 3) = sampling_period;
+            int target_dim = target_json["target_dim"];
+            arma::mat A(target_dim, target_dim, arma::fill::eye);
+            construct_state_transition_mat(A, sampling_period);
+            std::cout << "Transition mat A in true target: " << std::endl << A << std::endl;
 
 
             //TODO add noise to state transition mat
             arma::mat W(4, 4, arma::fill::eye);
 
             arma::vec x_init(4);
-
-            std::cout << target_json["initial_state"] << std::endl;
-            std::cout << typeid(target_json["initial_state"]).name() << std::endl;
+            std::cout << "Initial true target state: " << target_json["initial_state"] << std::endl;
             int i = 0;
             for (const auto& element: target_json["initial_state"]) {
                 x_init(i) = static_cast<double>(element);
