@@ -22,6 +22,14 @@ public:
 
     virtual void update_belief(arma::vec measurement, arma::vec ownship) = 0;
 
+    arma::vec get_target_belief_state() {
+        return infoTarget.get_state();
+    }
+
+    arma::mat get_target_belief_cov() {
+        return infoTarget.get_cov();
+    }
+
     virtual ~Tracker() = default;
 
 };
@@ -47,7 +55,8 @@ public:
 
 
         //Predictions step
-        arma::vec x_bar_t = infoTarget.forward_simulate(1);
+        infoTarget.forward_simulate(1);
+        arma::vec x_bar_t = infoTarget.get_state();
         arma::mat Sigma_bar_t = A * Sigma_curr * A.t() + W;
 
         sensor->get_jacobian(H, V, x_bar_t, ownship);

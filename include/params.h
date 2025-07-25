@@ -70,7 +70,8 @@ public:
         }
     }
 
-    void write_to_log(const arma::vec &measurement, const arma::vec &target_state, const arma::vec &ownship_state) {
+    void write_to_log(const arma::vec &measurement, const arma::vec &target_state, const arma::vec &ownship_state,
+        const arma::vec &target_belief_state, const arma::mat &target_belief_cov) {
         if (outputFile.is_open()) {
             outputFile << "Measurement: ";
             print_arma_vec(measurement, outputFile);
@@ -78,6 +79,10 @@ public:
             print_arma_vec(target_state, outputFile);
             outputFile << "ownship: ";
             print_arma_vec(ownship_state, outputFile);
+            outputFile << "target belief state: ";
+            print_arma_vec(target_belief_state, outputFile);
+            outputFile << "target belief covariance: " << std::endl;
+            target_belief_cov.raw_print(outputFile);
         } else {
             std::cerr << "Error opening file" << std::endl;
         }
@@ -103,14 +108,14 @@ public:
         W = std::pow(accel_dist, 2) * W;
     }
 
-    static void construct_state_transition_mat(arma::mat &A, double sampling_period) {
+    static void construct_state_transition_mat(arma::mat &A, const double sampling_period) {
 
         // Assume A initialized outside this function as identity mat
         A(0, 2) = sampling_period;
         A(1, 3) = sampling_period;
     }
 
-    static void construct_initial_target_covariance(arma::mat &Sigma, double init_cov_pos, double init_cov_vel) {
+    static void construct_initial_target_covariance(arma::mat &Sigma, const double init_cov_pos, const double init_cov_vel) {
         Sigma(0, 0) = init_cov_pos;
         Sigma(1, 1) = init_cov_pos;
         Sigma(2, 2) = init_cov_vel;
@@ -190,9 +195,9 @@ public:
 
 
             //TODO add noise to state transition mat
-            arma::mat W(4, 4, arma::fill::eye);
+            arma::mat W(target_dim, target_dim, arma::fill::eye);
 
-            arma::vec x_init(4);
+            arma::vec x_init(target_dim, 1);
             std::cout << "Initial true target state: " << target_json["initial_state"] << std::endl;
             int i = 0;
             for (const auto& element: target_json["initial_state"]) {

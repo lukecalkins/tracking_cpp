@@ -21,8 +21,9 @@ int main() {
         arma::vec measurement = sensor->get_measurement(target->get_state(), ownship);
         tracker->update_belief(measurement, ownship);
         if (p.is_logging_enabled()) {
-            //std::cout << "Logging measurement: " << measurement << std::endl
-            p.write_to_log(measurement, target->get_state(), ownship);
+            arma::vec target_state = tracker->get_target_belief_state();
+            arma::mat target_cov = tracker->get_target_belief_cov();
+            p.write_to_log(measurement, target->get_state(), ownship, target_state, target_cov);
             std::cout << "wrote log entry" << std::endl;
         }
     }

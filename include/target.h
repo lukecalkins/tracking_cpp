@@ -14,7 +14,7 @@ class Target {
 public:
     Target(const unsigned int ID, const unsigned int x_dim): ID(ID), x_dim(x_dim){}
 
-    virtual arma::vec forward_simulate(const int T) = 0;
+    virtual void forward_simulate(const int T) = 0;
 
     virtual arma::vec get_state() const = 0;
 
@@ -44,9 +44,8 @@ public:
     Target2DLinear(const unsigned int ID, const arma::vec &x_init, const arma::mat &A, const arma::mat &W):
     Target(ID, 4), x_t (x_init), A(A), W(W){}
 
-    arma::vec forward_simulate(const int T) override {
-        arma::vec next_state = A * x_t;
-        return next_state;
+    void forward_simulate(const int T) override {
+        x_t = A * x_t;
     }
 
     arma::vec get_state() const override{
