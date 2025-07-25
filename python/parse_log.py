@@ -28,6 +28,7 @@ def read_log(log_file):
             target_lines = [line for line in content if "target:" in line]
             ownship_lines = [line for line in content if "ownship:" in line]
 
+
             # Parse lines specific to each item
             measurements = [float(meas.split("Measurement:")[1]) for meas in measurement_lines]
             target_states = [np.fromstring(target.split("target:")[1].strip(), dtype=float, sep=',') for target in target_lines]

@@ -19,6 +19,17 @@ void print_arma_vec(const arma::vec &v, std::ofstream &fstream) {
 }
 
 void print_arma_mat(const arma::mat &m, std::ofstream &fstream) {
-    
+
+    bool exit_loops = false;
+    for (arma::uword i = 0; i < m.n_rows; i++) {
+        for (arma::uword j = 0; j < m.n_cols; j++) {
+            fstream << m(i,j);
+            if (i == m.n_rows -1 && j == m.n_cols -1) {
+                break;
+            }
+            fstream << ", ";
+        }
+    }
+    fstream << std::endl;
 }
 #endif //UTILS_H

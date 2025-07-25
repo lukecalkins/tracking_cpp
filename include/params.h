@@ -81,8 +81,8 @@ public:
             print_arma_vec(ownship_state, outputFile);
             outputFile << "target belief state: ";
             print_arma_vec(target_belief_state, outputFile);
-            outputFile << "target belief covariance: " << std::endl;
-            target_belief_cov.raw_print(outputFile);
+            outputFile << "target belief covariance: ";
+            print_arma_mat(target_belief_cov, outputFile);
         } else {
             std::cerr << "Error opening file" << std::endl;
         }
