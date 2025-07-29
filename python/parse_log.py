@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import sys, os
+from plot_utils import get_cov_ellipse
 
 plt.rcParams["axes.grid"] = True
 
@@ -66,8 +67,9 @@ if __name__ == '__main__':
     target_point = ax.plot(target_states[0][0], target_states[0][1], 'rx', label='Target')[0]
     bearing_line = ax.plot(ownship_states[0][0] + bearing_points*np.cos(measurements[0]), ownship_states[0][1] + bearing_points*np.sin(measurements[0]), 'g--', label='Measurement')[0]
     target_belief_point = ax.plot(target_belief_states[0][0], target_belief_states[0][1], 'g.', label='Target estimate')[0]
-
-    ax.set(xlim=[-1, 11], ylim=[-1, 2], xlabel='x', ylabel='y')
+    ellipse_init = get_cov_ellipse(target_belief_states[0], cov_belief_states[0])
+    cov_ellipse = ax.add_patch(ellipse_init.get_ellipse())
+    #ax.set(xlim=[-1, 11], ylim=[-1, 2], xlabel='x', ylabel='y')
     ax.legend()
 
     def update(frame):
@@ -76,17 +78,23 @@ if __name__ == '__main__':
         y_own = ownship_states[frame][1]
         x_tar = target_states[frame][0]
         y_tar = target_states[frame][1]
-        x_tar_belief = target_belief_states[frame][0]
-        y_tar_belief = target_belief_states[frame][1]
+        tar_belief = target_belief_states[frame]
+        cov = cov_belief_states[frame]
+        ellipse = get_cov_ellipse(tar_belief, cov)
+
         ownship_point.set_xdata([x_own])
         ownship_point.set_ydata([y_own])
         target_point.set_xdata([x_tar])
         target_point.set_ydata([y_tar])
         bearing_line.set_xdata(x_own + bearing_points*np.cos(measurements[frame]))
         bearing_line.set_ydata(y_own + bearing_points*np.sin(measurements[frame]))
-        target_belief_point.set_xdata([x_tar_belief])
-        target_belief_point.set_ydata([y_tar_belief])
-        return ownship_point, target_point, bearing_line, target_belief_point
+        target_belief_point.set_xdata([tar_belief[0]])
+        target_belief_point.set_ydata([tar_belief[1]])
+
+        cov_ellipse.set(center=(ellipse.center_x, ellipse.center_y), width=ellipse.width, height=ellipse.height,
+                        angle=ellipse.angle, facecolor=ellipse.facecolor, edgecolor=ellipse.edgecolor)
+
+        return ownship_point, target_point, bearing_line, target_belief_point, cov_ellipse
 
     ani = animation.FuncAnimation(fig=fig, func=update, frames=10, interval=fps)
     ani.save(filename="../data/pillow_example.gif", writer="pillow")
