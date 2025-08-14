@@ -24,6 +24,8 @@ public:
 
     virtual void get_jacobian(arma::mat & H, arma::mat & V, const arma::vec &x_t, const arma::vec &p_t) = 0;
 
+    virtual arma::mat get_measurement_covariance() = 0;
+
     unsigned int get_z_dim() const {
         return z_dim;
     }
@@ -77,6 +79,11 @@ public:
         V(0, 0) = std::pow(b_sigma, 2);
     }
 
+    arma::mat get_measurement_covariance() override {
+        arma::mat R = {std::pow(b_sigma, 2)};
+
+        return R;
+    }
 
     ~BearingSensor() override = default;
 };

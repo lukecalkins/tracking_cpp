@@ -16,6 +16,8 @@ public:
 
     virtual void forward_simulate(const int T) = 0;
 
+    virtual arma::vec predict_state(const int T, const arma::vec state) = 0;
+
     virtual arma::vec get_state() const = 0;
 
     unsigned int get_x_dim() const {
@@ -46,6 +48,10 @@ public:
 
     void forward_simulate(const int T) override {
         x_t = A * x_t;
+    }
+
+    arma::vec predict_state(const int T, const arma::vec state) override {
+        return A * state;
     }
 
     arma::vec get_state() const override{

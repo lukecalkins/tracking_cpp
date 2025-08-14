@@ -5,9 +5,13 @@ set(CMAKE_CXX_STANDARD 20)
 
 
 
-add_executable(Tracking main.cpp)
+add_executable(Tracking main.cpp
+        src/KalmanFilter.cpp
+        src/UnscentedKalmanFilter.cpp)
 add_executable(test_sensor test/test_sensor.cpp)
-add_executable(test_params test/test_params.cpp)
+add_executable(test_params test/test_params.cpp
+        src/UnscentedKalmanFilter.cpp
+        src/KalmanFilter.cpp)
 add_executable(test_target test/test_target.cpp)
 
 target_include_directories (Tracking PUBLIC include)

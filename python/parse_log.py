@@ -50,7 +50,8 @@ def read_log(log_file):
 
 if __name__ == '__main__':
     logdir = '../data/'
-    logfile = 'output_log.txt'
+    logfile = 'output_log_UKF.txt'
+    video_filename = "../data/UKF.gif"
 
     full_file = os.path.join(logdir, logfile)
 
@@ -97,5 +98,5 @@ if __name__ == '__main__':
         return ownship_point, target_point, bearing_line, target_belief_point, cov_ellipse
 
     ani = animation.FuncAnimation(fig=fig, func=update, frames=10, interval=fps)
-    ani.save(filename="../data/pillow_example.gif", writer="pillow")
+    ani.save(filename=video_filename, writer="pillow")
     # plt.show()

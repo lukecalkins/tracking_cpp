@@ -1,0 +1,7 @@
+{
+  "tracker_type": "UKF",
+  "use_target_initial_state": true,
+  "alpha": 1,
+  "beta": 2,
+  "kappa": 6
+}

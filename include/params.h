@@ -123,41 +123,48 @@ public:
     }
     std::shared_ptr<Tracker> build_tracker(const json &tracker_json, const json &target_json, const json &sim_json) {
         std::shared_ptr<Tracker> tracker;
-        if (tracker_json["tracker type"] == "EKF") {
-            if (tracker_json["use_target_initial_state"]) {
-                const double sampling_period = sim_json["sampling_period"];
+        if (tracker_json["use_target_initial_state"]) {
+            const double sampling_period = sim_json["sampling_period"];
 
-                int target_dim = target_json["target_dim"];
-                arma::mat A(target_dim, target_dim, arma::fill::eye);
-                construct_state_transition_mat(A, sampling_period);
-                std::cout << "Transition mat A in tracker: " << std::endl << A << std::endl;
+            int target_dim = target_json["target_dim"];
+            arma::mat A(target_dim, target_dim, arma::fill::eye);
+            construct_state_transition_mat(A, sampling_period);
+            std::cout << "Transition mat A in tracker: " << std::endl << A << std::endl;
 
-                double accel_dist = target_json["sigma_a"];
-                arma::mat W(target_dim, target_dim, arma::fill::zeros);
-                construct_process_noise_cov(W, accel_dist, sampling_period);
-                std::cout << "Noise mat W: " << std::endl << W << std::endl;
+            double accel_dist = target_json["sigma_a"];
+            arma::mat W(target_dim, target_dim, arma::fill::zeros);
+            construct_process_noise_cov(W, accel_dist, sampling_period);
+            std::cout << "Noise mat W: " << std::endl << W << std::endl;
 
-                arma::mat init_cov(target_dim, target_dim, arma::fill::zeros);
-                double init_cov_pos = target_json["initial_cov_pos"];
-                double init_cov_vel = target_json["initial_cov_vel"];
-                construct_initial_target_covariance(init_cov, init_cov_pos, init_cov_vel);
-                std::cout << "Initial target covariance: " << std::endl << init_cov << std::endl;
+            arma::mat init_cov(target_dim, target_dim, arma::fill::zeros);
+            double init_cov_pos = target_json["initial_cov_pos"];
+            double init_cov_vel = target_json["initial_cov_vel"];
+            construct_initial_target_covariance(init_cov, init_cov_pos, init_cov_vel);
+            std::cout << "Initial target covariance: " << std::endl << init_cov << std::endl;
 
-                arma::vec x_init(target_dim, 1);
-                std::cout << "Initial target state in tracker: " << target_json["initial_state"] << std::endl;
-                int i = 0;
-                for (const auto& element: target_json["initial_state"]) {
-                    x_init(i) = static_cast<double>(element);
-                    i++;
-                }
+            arma::vec x_init(target_dim, 1);
+            std::cout << "Initial target state in tracker: " << target_json["initial_state"] << std::endl;
+            int i = 0;
+            for (const auto& element: target_json["initial_state"]) {
+                x_init(i) = static_cast<double>(element);
+                i++;
+            }
 
-                //create target belief
-                TargetLinear2DBelief init_info_target(1, x_init, A, W, init_cov);
+            //create target belief
+            TargetLinear2DBelief init_info_target(1, x_init, A, W, init_cov);
 
+            if (tracker_json["tracker_type"] == "EKF") {
                 tracker = std::make_shared<KalmanFilter>(init_info_target, sensor);
             }
-        }
+            else if (tracker_json["tracker_type"] == "UKF") {
+                double alpha = tracker_json["alpha"];
+                double beta = tracker_json["beta"];
+                double kappa = tracker_json["kappa"];
 
+                tracker = std::make_shared<UnscentedKalmanFilter>(init_info_target, sensor, alpha, beta, kappa);
+            }
+
+        }
         return tracker;
     }
 

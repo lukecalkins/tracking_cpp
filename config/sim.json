@@ -1,8 +1,8 @@
 {
   "sensor_file": "/Users/lukecalkins/CLionProjects/Tracking/config/sensor.json",
   "target_file": "/Users/lukecalkins/CLionProjects/Tracking/config/target.json",
-  "tracker_file": "/Users/lukecalkins/CLionProjects/Tracking/config/filter.json",
-  "output_log": "/Users/lukecalkins/CLionProjects/Tracking/data/output_log.txt",
+  "tracker_file": "/Users/lukecalkins/CLionProjects/Tracking/config/tracker.json",
+  "output_log": "/Users/lukecalkins/CLionProjects/Tracking/data/output_log_UKF.txt",
   "steps": 10,
   "sampling_period": 1,
   "logging": true
