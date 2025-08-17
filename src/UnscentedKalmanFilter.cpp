@@ -80,4 +80,6 @@ void UnscentedKalmanFilter::update_belief(arma::vec measurement, arma::vec ownsh
     // final update
     arma::vec x_k_update = x_k_predict + K_k *(measurement - z_predict);
     arma::mat P_k_update = cov_predict + - K_k * S_k * K_k.t();
+
+    infoTarget.update_belief(x_k_update, P_k_update);
 }

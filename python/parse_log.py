@@ -34,11 +34,11 @@ def read_log(log_file):
             target_belief_states = [np.fromstring(belief.split("target belief state:")[1].strip(), dtype=float, sep=',') for belief in state_belief_lines]
             cov_belief_states = [np.fromstring(cov.split("target belief covariance:")[1].strip(), dtype=float, sep=',') for cov in cov_belief_lines]
 
-            print("Number of measurements: ", len(measurements))
-            print("Number of target states: ", len(target_states))
-            print("Number of ownship states: ", len(ownship_states))
-            print("Number of target belief states: ", len(target_belief_states))
-            print("Number of covariance states: ", len(cov_belief_states))
+            # print("Number of measurements: ", len(measurements))
+            # print("Number of target states: ", len(target_states))
+            # print("Number of ownship states: ", len(ownship_states))
+            # print("Number of target belief states: ", len(target_belief_states))
+            # print("Number of covariance states: ", len(cov_belief_states))
 
             return measurements, target_states, ownship_states, target_belief_states, cov_belief_states
 
@@ -50,28 +50,27 @@ def read_log(log_file):
 
 if __name__ == '__main__':
     logdir = '../data/'
-    logfile = 'output_log_UKF.txt'
-    video_filename = "../data/UKF.gif"
-
+    logfile = 'output_log_UKF_20_1.txt'
+    video_filename = "../data/UKF_20_1.gif"
+    fps=100
     full_file = os.path.join(logdir, logfile)
-
     measurements, target_states, ownship_states, target_belief_states, cov_belief_states = read_log(full_file)
     print("Mean: ", np.mean(measurements)*180./np.pi, "Std: ", np.std(measurements)*180./np.pi)
-    fps=1000
+    total_frames = len(measurements)
     vid_dir = '../data/'
     vid_name = 'animation'
 
     # Artist animation
     fig, ax = plt.subplots()
-    bearing_points = np.linspace(0,20, 100)
+    bearing_points = np.linspace(0,100, 100)
     ownship_point = ax.plot(ownship_states[0][0], ownship_states[0][1], 'b.', label='sensor')[0]
-    target_point = ax.plot(target_states[0][0], target_states[0][1], 'rx', label='Target')[0]
+    target_point = ax.plot(target_states[0][0], target_states[0][1], 'g.', label='Target')[0]
     bearing_line = ax.plot(ownship_states[0][0] + bearing_points*np.cos(measurements[0]), ownship_states[0][1] + bearing_points*np.sin(measurements[0]), 'g--', label='Measurement')[0]
-    target_belief_point = ax.plot(target_belief_states[0][0], target_belief_states[0][1], 'g.', label='Target estimate')[0]
+    target_belief_point = ax.plot(target_belief_states[0][0], target_belief_states[0][1], 'rx', label='Target estimate')[0]
     ellipse_init = get_cov_ellipse(target_belief_states[0], cov_belief_states[0])
     cov_ellipse = ax.add_patch(ellipse_init.get_ellipse())
-    #ax.set(xlim=[-1, 11], ylim=[-1, 2], xlabel='x', ylabel='y')
-    ax.legend()
+    ax.set(xlim=[-1, 11], ylim=[-1, 40], xlabel='x', ylabel='y')
+    ax.legend(loc='upper left')
 
     def update(frame):
         # for each frame, update the data stored on each artist.
@@ -97,6 +96,6 @@ if __name__ == '__main__':
 
         return ownship_point, target_point, bearing_line, target_belief_point, cov_ellipse
 
-    ani = animation.FuncAnimation(fig=fig, func=update, frames=10, interval=fps)
+    ani = animation.FuncAnimation(fig=fig, func=update, frames=total_frames, interval=fps)
     ani.save(filename=video_filename, writer="pillow")
     # plt.show()
