@@ -53,14 +53,15 @@ public:
         std::string tracker_config_file = data["tracker_file"];
         std::ifstream k(tracker_config_file);
         json tracker_data = json::parse(k);
-        std::cout <<  "Tracker type: " << tracker_data["tracker type"] << std::endl;
+        std::cout <<  "Tracker type: " << tracker_data["tracker_type"] << std::endl;
 
-        bool logging_enabled = data["logging"];
+        // Parse raw values
         outputFilename = data["output_log"];
         num_steps = data["steps"];
         sampling_period = data["sampling_period"];
+        logging = data["logging"];
 
-        logging = logging_enabled;
+        // Build objects
         sensor = build_sensor(sensor_data, data);
         target = build_target(target_data, data);
         tracker = build_tracker(tracker_data, target_data, data);
@@ -163,7 +164,9 @@ public:
 
                 tracker = std::make_shared<UnscentedKalmanFilter>(init_info_target, sensor, alpha, beta, kappa);
             }
-
+            else if (tracker_json["tracker_type"] == "ISAM2") {
+                tracker = std::make_shared<ISAMFilter>(init_info_target, sensor);
+            }
         }
         return tracker;
     }

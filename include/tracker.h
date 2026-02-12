@@ -8,6 +8,7 @@
 #include "target.h"
 #include "targetBelief.h"
 #include "sensor.h"
+#include <gtsam/nonlinear/ExtendedKalmanFilter.h>
 
 
 class Tracker {
@@ -54,14 +55,21 @@ class UnscentedKalmanFilter final : public Tracker {
 
 public:
 
-    UnscentedKalmanFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor, double alpha, double beta, double kappa) :
-                                                                Tracker(init_target_belief, sensor),
-                                                                alpha(alpha),
-                                                                beta(beta),
-                                                                kappa(kappa){};
+    UnscentedKalmanFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor, double alpha, double beta, double kappa);
 
     void update_belief(arma::vec measurement, arma::vec ownship) override;
 
     ~UnscentedKalmanFilter() override = default;
 };
+
+class ISAMFilter final : public Tracker {
+
+public:
+    ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor);
+
+    void update_belief(arma::vec measurement, arma::vec ownship) override;
+
+    ~ISAMFilter() override = default;
+};
+
 #endif //TRACKER_H

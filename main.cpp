@@ -15,6 +15,10 @@ int main() {
     std::shared_ptr<Target> target = p.get_target();
     std::shared_ptr<Tracker> tracker = p.get_tracker();
     const arma::vec ownship = {0, 0, 0};
+    std::vector<arma::vec> ownships;
+    ownships.push_back(ownship);
+    const arma::vec ownship_2 =  {50, 0, 0};
+    ownships.push_back(ownship_2);
 
     for (unsigned int i = 0; i < p.get_num_steps(); i++) {
         target->forward_simulate(p.get_sampling_period());

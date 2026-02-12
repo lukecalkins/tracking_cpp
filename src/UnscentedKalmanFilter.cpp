@@ -2,7 +2,11 @@
 // Created by Luke Calkins on 8/2/25.
 //
 #include "tracker.h"
-
+UnscentedKalmanFilter::UnscentedKalmanFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor, double alpha, double beta, double kappa) :
+                                                                Tracker(init_target_belief, sensor),
+                                                                alpha(alpha),
+                                                                beta(beta),
+                                                                kappa(kappa){};
 void UnscentedKalmanFilter::update_belief(arma::vec measurement, arma::vec ownship) {
     /*
      L = length of state

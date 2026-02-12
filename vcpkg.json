@@ -20,5 +20,8 @@
   }, {
     "name" : "nlohmann-json",
     "version>=" : "3.12.0"
+  }, {
+    "name" : "gtsam",
+    "version>=" : "4.2.0#1"
   } ]
 }
