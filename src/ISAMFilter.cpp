@@ -12,8 +12,11 @@
 
 #include <iostream>
 #include <cmath>
+#include <random>
 
 #include "tracker.h"
+#include "sensor.h"
+#include "utils.h"
 
 using namespace gtsam;
 inline Symbol X(size_t t) { return Symbol('x', t); }
@@ -144,7 +147,44 @@ public:
     }
 };
 
-ISAMFilter::ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor):Tracker(init_target_belief, sensor){};
+ISAMFilter::ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor)
+                        :Tracker(init_target_belief, sensor) {
+
+    /*
+    ISAM2 isam;
+    NonlinearFactorGraph newFactors;
+    Values initialEstimates;
+    */
+
+    // Convert process noise covariance from arma to eign before defining
+    arma::mat process_noise_arma = init_target_belief.get_cov();
+    Matrix process_noise(process_noise_arma.n_rows, process_noise_arma.n_cols);
+    arma_mat_to_gtsam_mat(process_noise_arma, process_noise);
+    auto motionNoise = noiseModel::Gaussian::Covariance(process_noise);
+
+    auto bearingNoise = noiseModel::Isotropic::Sigma(1, sensor->get_measurement_noise_double());
+
+    Vector priorSigmas(init_target_belief.get_x_dim());
+    arma::mat init_cov = init_target_belief.get_cov();
+    for (int i = 0; i < priorSigmas.size(); i++) {
+        priorSigmas[i] = init_cov(i ,i);
+    }
+    auto priorNoise = noiseModel::Diagonal::Sigmas(priorSigmas);
+
+    //Convert initial belief to gtsam vector
+    arma::vec x0_arma = init_target_belief.get_state();
+    Vector x0(x0_arma.n_elem);
+    arma_vec_to_gtsam_vec(x0_arma, x0);
+
+    // Insert prior
+    newFactors.add(PriorFactor<Vector>(X(0), x0, priorNoise));
+    initialEstimates.insert(X(0), x0);
+
+    //Commit initial priors into ISAM
+    isam.update(newFactors, initialEstimates);
+    newFactors.resize(0);
+    initialEstimates.clear();
+};
 
 void ISAMFilter::update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships) {};
 

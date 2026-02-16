@@ -26,6 +26,8 @@ public:
 
     virtual arma::mat get_measurement_covariance() = 0;
 
+    virtual double get_measurement_noise_double() = 0;
+
     unsigned int get_z_dim() const {
         return z_dim;
     }
@@ -84,6 +86,10 @@ public:
         arma::mat R = {std::pow(b_sigma, 2)};
 
         return R;
+    }
+
+    double get_measurement_noise_double() override {
+        return b_sigma;
     }
 
     ~BearingSensor() override = default;

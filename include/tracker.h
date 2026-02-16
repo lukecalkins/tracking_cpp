@@ -10,6 +10,8 @@
 #include "sensor.h"
 #include <gtsam/nonlinear/ExtendedKalmanFilter.h>
 
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <gtsam/nonlinear/ISAM2.h>
 
 class Tracker {
 
@@ -65,6 +67,10 @@ public:
 
 
 class ISAMFilter final : public Tracker {
+
+    gtsam::ISAM2 isam;
+    gtsam::NonlinearFactorGraph newFactors;
+    gtsam::Values initialEstimates;
 
 public:
     ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor);
