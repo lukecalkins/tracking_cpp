@@ -14,7 +14,7 @@ class CovEllipse:
         self.facecolor = facecolor
         self.edgecolor = edgecolor
         self.ellipse = Ellipse((self.center_x, self.center_y), width=self.width, height=self.height,
-                          angle=self.angle, facecolor='none', edgecolor='red')
+                          angle=self.angle, facecolor='none', edgecolor='red', label=r'1$\sigma$ covariance')
 
     def get_ellipse(self):
         return self.ellipse

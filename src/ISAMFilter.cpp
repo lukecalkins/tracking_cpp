@@ -146,5 +146,5 @@ public:
 
 ISAMFilter::ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor):Tracker(init_target_belief, sensor){};
 
-void ISAMFilter::update_belief(arma::vec measurement, arma::vec ownship) {};
+void ISAMFilter::update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships) {};
 

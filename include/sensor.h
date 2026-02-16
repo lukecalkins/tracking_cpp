@@ -54,7 +54,7 @@ public:
          * x_t = target state [x1, x2, v1, v2]
          * p_t = ownship vector [x1, x2, heading]
          */
-        arma::vec bearing = {std::atan2(x_t[1] - p_t[1], x_t[0] - p_t[0]) - p_t[0]};
+        arma::vec bearing = {std::atan2(x_t[1] - p_t[1], x_t[0] - p_t[0]) - p_t[2]};
 
         return bearing;
     }
@@ -71,12 +71,13 @@ public:
 
     void get_jacobian(arma::mat &H, arma::mat & V, const arma::vec &x_t, const arma::vec &p_t) override {
 
-        const double range_2 = std::pow(x_t[1] - p_t[1], 2.0) + std::pow(x_t[0] - p_t[0], 2.0);
 
-        H(0, 0) = (p_t[1] - x_t[1]) / range_2;
-        H(0, 1) = (x_t[0] - p_t[0]) / range_2;
+            const double range_2 = std::pow(x_t[1] - p_t[1], 2.0) + std::pow(x_t[0] - p_t[0], 2.0);
 
-        V(0, 0) = std::pow(b_sigma, 2);
+            H(0, 0) = (p_t[1] - x_t[1]) / range_2;
+            H(0, 1) = (x_t[0] - p_t[0]) / range_2;
+
+            V(0, 0) = std::pow(b_sigma, 2);
     }
 
     arma::mat get_measurement_covariance() override {

@@ -71,15 +71,23 @@ public:
         }
     }
 
-    void write_to_log(const arma::vec &measurement, const arma::vec &target_state, const arma::vec &ownship_state,
+    void write_to_log(const std::vector<arma::vec> &measurements, const arma::vec &target_state, const std::vector<arma::vec> &ownship_states,
         const arma::vec &target_belief_state, const arma::mat &target_belief_cov) {
         if (outputFile.is_open()) {
-            outputFile << "Measurement: ";
-            print_arma_vec(measurement, outputFile);
+            for (int i = 0; i < measurements.size(); i++) {
+                outputFile << "Measurement" << i << ": ";
+                print_arma_vec(measurements[i], outputFile);
+            }
+            //outputFile << "Measurement: ";
+            //print_multi_arma_vec(measurements, outputFile);
             outputFile << "target: ";
             print_arma_vec(target_state, outputFile);
-            outputFile << "ownship: ";
-            print_arma_vec(ownship_state, outputFile);
+            for (int i = 0; i < ownship_states.size(); i++) {
+                outputFile  << "ownship" << i << ": ";
+                print_arma_vec(ownship_states[i], outputFile);
+            }
+            //outputFile << "ownship: ";
+            //print_multi_arma_vec(ownship_states, outputFile);
             outputFile << "target belief state: ";
             print_arma_vec(target_belief_state, outputFile);
             outputFile << "target belief covariance: ";

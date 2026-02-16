@@ -18,6 +18,12 @@ void print_arma_vec(const arma::vec &v, std::ofstream &fstream) {
     fstream << std::endl;
 }
 
+void print_multi_arma_vec(const std::vector<arma::vec> & v, std::ofstream &fstream) {
+    for (auto item : v) {
+        print_arma_vec(item, fstream);
+    }
+}
+
 void print_arma_mat(const arma::mat &m, std::ofstream &fstream) {
 
     bool exit_loops = false;

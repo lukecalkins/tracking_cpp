@@ -21,7 +21,7 @@ public:
 
     Tracker(TargetLinear2DBelief init_target_estimate, std::shared_ptr<Sensor> sensor) : infoTarget((init_target_estimate)), sensor(sensor){};
 
-    virtual void update_belief(arma::vec measurement, arma::vec ownship) = 0;
+    virtual void update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships) = 0;
 
     arma::vec get_target_belief_state() {
         return infoTarget.get_state();
@@ -42,10 +42,11 @@ public:
 
     KalmanFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor): Tracker(init_target_belief, sensor){};
 
-    void update_belief(arma::vec measurement, arma::vec ownship) override;
+    void update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships) override;
 
     ~KalmanFilter() override = default;
 };
+
 
 class UnscentedKalmanFilter final : public Tracker {
 
@@ -57,17 +58,18 @@ public:
 
     UnscentedKalmanFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor, double alpha, double beta, double kappa);
 
-    void update_belief(arma::vec measurement, arma::vec ownship) override;
+    void update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships) override;
 
     ~UnscentedKalmanFilter() override = default;
 };
+
 
 class ISAMFilter final : public Tracker {
 
 public:
     ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor);
 
-    void update_belief(arma::vec measurement, arma::vec ownship) override;
+    void update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships) override;
 
     ~ISAMFilter() override = default;
 };

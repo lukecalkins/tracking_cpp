@@ -7,7 +7,7 @@ UnscentedKalmanFilter::UnscentedKalmanFilter(TargetLinear2DBelief init_target_be
                                                                 alpha(alpha),
                                                                 beta(beta),
                                                                 kappa(kappa){};
-void UnscentedKalmanFilter::update_belief(arma::vec measurement, arma::vec ownship) {
+void UnscentedKalmanFilter::update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships) {
     /*
      L = length of state
      N = number of sigma points
@@ -63,7 +63,7 @@ void UnscentedKalmanFilter::update_belief(arma::vec measurement, arma::vec ownsh
     arma::vec sigmaMeasurementsPredict(2*L + 1, arma::fill::zeros);
     arma::mat S_k(z_dim, z_dim, arma::fill::zeros);
     for (int i = 0; i < 2*L + 1; i++) {
-        arma::vec sigmaMeasurement = sensor->observation_model(sigmaVecsPredict.col(i), ownship);
+        arma::vec sigmaMeasurement = sensor->observation_model(sigmaVecsPredict.col(i), ownships[i]); //TODO fix ownship
         sigmaMeasurementsPredict(i) = sigmaMeasurement(0);
         z_predict += W_a(i) * sigmaMeasurementsPredict(i);
     }
@@ -82,7 +82,7 @@ void UnscentedKalmanFilter::update_belief(arma::vec measurement, arma::vec ownsh
     arma::mat K_k = C_xz * arma::inv(S_k);
 
     // final update
-    arma::vec x_k_update = x_k_predict + K_k *(measurement - z_predict);
+    arma::vec x_k_update = x_k_predict + K_k *(measurements[0] - z_predict); //TODO fix measurements
     arma::mat P_k_update = cov_predict + - K_k * S_k * K_k.t();
 
     infoTarget.update_belief(x_k_update, P_k_update);

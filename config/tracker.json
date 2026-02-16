@@ -1,5 +1,5 @@
 {
-  "tracker_type": "ISAM2",
+  "tracker_type": "EKF",
   "use_target_initial_state": true,
   "alpha": 1,
   "beta": 2,
