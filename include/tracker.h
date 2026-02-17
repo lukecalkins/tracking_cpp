@@ -18,10 +18,16 @@ class Tracker {
 protected:
     TargetLinear2DBelief infoTarget;
     std::shared_ptr<Sensor> sensor;
+    unsigned int curr_time_step;
+    double sample_interval;
 
 public:
 
-    Tracker(TargetLinear2DBelief init_target_estimate, std::shared_ptr<Sensor> sensor) : infoTarget((init_target_estimate)), sensor(sensor){};
+    Tracker(TargetLinear2DBelief init_target_estimate, std::shared_ptr<Sensor> sensor, double sample_interval)
+                : infoTarget((init_target_estimate)),
+                sensor(sensor),
+                curr_time_step(0),
+                sample_interval(sample_interval){};
 
     virtual void update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships) = 0;
 
@@ -42,7 +48,8 @@ class KalmanFilter final : public Tracker {
 
 public:
 
-    KalmanFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor): Tracker(init_target_belief, sensor){};
+    KalmanFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor, double sample_interval)
+                : Tracker(init_target_belief, sensor, sample_interval){};
 
     void update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships) override;
 
@@ -58,7 +65,12 @@ class UnscentedKalmanFilter final : public Tracker {
 
 public:
 
-    UnscentedKalmanFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor, double alpha, double beta, double kappa);
+    UnscentedKalmanFilter(TargetLinear2DBelief init_target_belief,
+                            std::shared_ptr<Sensor> sensor,
+                            double alpha,
+                            double beta,
+                            double kappa,
+                            double sample_interval);
 
     void update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships) override;
 
@@ -71,9 +83,11 @@ class ISAMFilter final : public Tracker {
     gtsam::ISAM2 isam;
     gtsam::NonlinearFactorGraph newFactors;
     gtsam::Values initialEstimates;
+    gtsam::noiseModel::Gaussian::shared_ptr motionNoise;
+    gtsam::noiseModel::Isotropic::shared_ptr sensorNoise;
 
 public:
-    ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor);
+    ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor, double sample_interval);
 
     void update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships) override;
 

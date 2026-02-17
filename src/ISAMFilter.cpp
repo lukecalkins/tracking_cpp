@@ -147,8 +147,8 @@ public:
     }
 };
 
-ISAMFilter::ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor)
-                        :Tracker(init_target_belief, sensor) {
+ISAMFilter::ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor, double sample_interval)
+                        :Tracker(init_target_belief, sensor, sample_interval) {
 
     /*
     ISAM2 isam;
@@ -160,9 +160,9 @@ ISAMFilter::ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<
     arma::mat process_noise_arma = init_target_belief.get_cov();
     Matrix process_noise(process_noise_arma.n_rows, process_noise_arma.n_cols);
     arma_mat_to_gtsam_mat(process_noise_arma, process_noise);
-    auto motionNoise = noiseModel::Gaussian::Covariance(process_noise);
+    motionNoise = noiseModel::Gaussian::Covariance(process_noise);
 
-    auto bearingNoise = noiseModel::Isotropic::Sigma(1, sensor->get_measurement_noise_double());
+    sensorNoise = noiseModel::Isotropic::Sigma(1, sensor->get_measurement_noise_double());
 
     Vector priorSigmas(init_target_belief.get_x_dim());
     arma::mat init_cov = init_target_belief.get_cov();
@@ -186,5 +186,45 @@ ISAMFilter::ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<
     initialEstimates.clear();
 };
 
-void ISAMFilter::update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships) {};
+void ISAMFilter::update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships)
+{
+    //predict current from last esiamte (time step still at previous index)
+    Vector last_est = isam.calculateEstimate<Vector>(X(curr_time_step));
+    Vector predicted(infoTarget.get_x_dim());
+    predicted = last_est;  // copy
+
+    // Propagate target and populate predicted state
+    infoTarget.forward_simulate(1);
+    arma::vec x_bar_t = infoTarget.get_state();
+    predicted(0) = x_bar_t(0);
+    predicted(1) = x_bar_t(1);
+
+    // Add motion and bearing factors for this time step
+    newFactors.add(boost::make_shared<MotionFactor>(X(curr_time_step), X(curr_time_step +1), sample_interval, motionNoise));
+    for (int i = 0; i < measurements.size(); i++) {
+        gtsam::Vector curr_measurement = arma_vec_to_gtsam_vec(measurements[i]);
+        gtsam::Vector curr_ownship = arma_vec_to_gtsam_vec(ownships[i]);
+        newFactors.add(boost::make_shared<BearingFactor>(X(curr_time_step + 1), curr_measurement[0], sensorNoise, curr_ownship));
+    }
+
+    // Insert initial guess for currrent time step
+    initialEstimates.insert(X(curr_time_step + 1), predicted);
+
+    //update ISAM2
+    isam.update(newFactors, initialEstimates);
+
+    // Clear temporaries
+    newFactors.resize(0);
+    initialEstimates.clear();
+
+    //Retrieve estimates and update belief
+    Vector est = isam.calculateEstimate<Vector>(X(curr_time_step + 1));
+    arma::vec x_t_update = gtsam_vec_to_arma_vec(est);
+    Matrix cov = isam.marginalCovariance(X(curr_time_step + 1));
+    arma::mat Sigma_t_update = gtsam_mat_to_arma_mat(cov);
+
+    infoTarget.update_belief(x_t_update, Sigma_t_update);
+
+    curr_time_step += 1;
+};
 

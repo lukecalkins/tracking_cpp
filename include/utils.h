@@ -57,10 +57,33 @@ inline void arma_vec_to_gtsam_vec(arma::vec &arma, gtsam::Vector &gvec) {
     }
 }
 
-/*
-void arma_to_Vector(arma::vec &arma, gtsam::Vector &vec) {
+inline gtsam::Vector arma_vec_to_gtsam_vec(arma::vec &arma) {
+    gtsam::Vector result(arma.n_elem);
+    for (int i = 0; i < arma.n_elem; i++) {
+        result(i) = arma(i);
+    }
 
+    return result;
 }
-*/
+
+inline arma::vec gtsam_vec_to_arma_vec(gtsam::Vector &gvec) {
+    arma::vec result(gvec.size());
+    for (int i = 0; i < gvec.size(); i++) {
+        result(i) = gvec(i);
+    }
+
+    return result;
+}
+
+inline arma::mat gtsam_mat_to_arma_mat(gtsam::Matrix &gMat) {
+    arma::mat result(gMat.rows(), gMat.cols());
+    for (int i = 0; i<gMat.rows(); i++) {
+        for (int j = 0; j < gMat.cols(); j++) {
+            result(i, j) = gMat(i, j);
+        }
+    }
+
+    return result;
+}
 
 #endif //UTILS_H

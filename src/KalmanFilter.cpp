@@ -44,5 +44,5 @@ void KalmanFilter::update_belief(std::vector<arma::vec> measurements, std::vecto
     arma::mat Sigma_t_update = (arma::eye(target_dim, target_dim) - K * H) * Sigma_bar_t;
 
     infoTarget.update_belief(x_t_update, Sigma_t_update);
-
+    curr_time_step += 1;
 }

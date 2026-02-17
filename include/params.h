@@ -163,17 +163,17 @@ public:
             TargetLinear2DBelief init_info_target(1, x_init, A, W, init_cov);
 
             if (tracker_json["tracker_type"] == "EKF") {
-                tracker = std::make_shared<KalmanFilter>(init_info_target, sensor);
+                tracker = std::make_shared<KalmanFilter>(init_info_target, sensor, sampling_period);
             }
             else if (tracker_json["tracker_type"] == "UKF") {
                 double alpha = tracker_json["alpha"];
                 double beta = tracker_json["beta"];
                 double kappa = tracker_json["kappa"];
 
-                tracker = std::make_shared<UnscentedKalmanFilter>(init_info_target, sensor, alpha, beta, kappa);
+                tracker = std::make_shared<UnscentedKalmanFilter>(init_info_target, sensor, alpha, beta, kappa, sampling_period);
             }
             else if (tracker_json["tracker_type"] == "ISAM2") {
-                tracker = std::make_shared<ISAMFilter>(init_info_target, sensor);
+                tracker = std::make_shared<ISAMFilter>(init_info_target, sensor, sampling_period);
             }
         }
         return tracker;

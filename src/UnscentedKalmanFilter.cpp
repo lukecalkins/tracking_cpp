@@ -2,8 +2,8 @@
 // Created by Luke Calkins on 8/2/25.
 //
 #include "tracker.h"
-UnscentedKalmanFilter::UnscentedKalmanFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor, double alpha, double beta, double kappa) :
-                                                                Tracker(init_target_belief, sensor),
+UnscentedKalmanFilter::UnscentedKalmanFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<Sensor> sensor, double alpha, double beta, double kappa, double sample_interval) :
+                                                                Tracker(init_target_belief, sensor, sample_interval),
                                                                 alpha(alpha),
                                                                 beta(beta),
                                                                 kappa(kappa){};
@@ -86,4 +86,5 @@ void UnscentedKalmanFilter::update_belief(std::vector<arma::vec> measurements, s
     arma::mat P_k_update = cov_predict + - K_k * S_k * K_k.t();
 
     infoTarget.update_belief(x_k_update, P_k_update);
+    curr_time_step += 1;
 }
