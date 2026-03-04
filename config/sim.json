@@ -2,8 +2,8 @@
   "sensor_file": "/Users/lukecalkins/CLionProjects/Tracking/config/sensor.json",
   "target_file": "/Users/lukecalkins/CLionProjects/Tracking/config/target.json",
   "tracker_file": "/Users/lukecalkins/CLionProjects/Tracking/config/tracker.json",
-  "output_log": "/Users/lukecalkins/CLionProjects/Tracking/data/multi_sensor.txt",
-  "steps": 200,
+  "output_log": "/Users/lukecalkins/CLionProjects/Tracking/data/multi_sensor_ISAM_middle_split_bsigma_2_asigma_0_1.txt",
+  "steps": 120,
   "sampling_period": 0.5,
   "logging": true
 }

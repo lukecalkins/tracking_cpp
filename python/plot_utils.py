@@ -14,7 +14,7 @@ class CovEllipse:
         self.facecolor = facecolor
         self.edgecolor = edgecolor
         self.ellipse = Ellipse((self.center_x, self.center_y), width=self.width, height=self.height,
-                          angle=self.angle, facecolor='none', edgecolor='red', label=r'1$\sigma$ covariance')
+                          angle=self.angle, facecolor='none', edgecolor='red', label=r'2$\sigma$ covariance')
 
     def get_ellipse(self):
         return self.ellipse
@@ -27,8 +27,8 @@ def get_cov_ellipse(targ_belief_state, cov_belief_state, n_std=2):
 
     lam, V = np.linalg.eig(pos_cov)
     # print("lam 1: ", lam[0], "lam 2: ", lam[1])
-    width = 1 * np.sqrt(lam[0]) # Major axis length
-    height = 1 * np.sqrt(lam[1]) # Minor axis length
+    width = n_std * np.sqrt(lam[0]) # Major axis length
+    height = n_std * np.sqrt(lam[1]) # Minor axis length
     D = np.array([[lam[0], 0],[0, lam[1]]])
     # print(D)
     # print(np.matmul(pos_cov, V), "\n?=\n", np.matmul(D, V))

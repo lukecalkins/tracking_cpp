@@ -13,8 +13,7 @@ add_executable(test_sensor test/test_sensor.cpp)
 add_executable(test_params test/test_params.cpp
         src/UnscentedKalmanFilter.cpp
         src/KalmanFilter.cpp
-        src/ISAMFilter.cpp
-        sketch/armadillo_example.cpp)
+        src/ISAMFilter.cpp)
 add_executable(test_target test/test_target.cpp)
 add_executable(isam_example sketch/isam_example_gpt.cpp)
 add_executable(isam_example2 sketch/isam_example2_gpt.cpp)

@@ -157,24 +157,36 @@ ISAMFilter::ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<
     */
 
     // Convert process noise covariance from arma to eign before defining
-    arma::mat process_noise_arma = init_target_belief.get_cov();
+    arma::mat process_noise_arma = init_target_belief.get_process_noise_covariance();
     Matrix process_noise(process_noise_arma.n_rows, process_noise_arma.n_cols);
     arma_mat_to_gtsam_mat(process_noise_arma, process_noise);
+
+    // Make Q strictly positive definite
+    process_noise += 1e-8 * Matrix::Identity(process_noise_arma.n_rows, process_noise_arma.n_cols);
+
     motionNoise = noiseModel::Gaussian::Covariance(process_noise);
+
+    std::cout << "process noise arma: " << std::endl << process_noise_arma << std::endl;
+    std::cout << "process noise gtsam: " << std::endl << process_noise << std::endl;
 
     sensorNoise = noiseModel::Isotropic::Sigma(1, sensor->get_measurement_noise_double());
 
     Vector priorSigmas(init_target_belief.get_x_dim());
     arma::mat init_cov = init_target_belief.get_cov();
+    std::cout << "arma init cov: " << std::endl << init_cov << std::endl;
+
     for (int i = 0; i < priorSigmas.size(); i++) {
-        priorSigmas[i] = init_cov(i ,i);
+        priorSigmas[i] = std::sqrt(init_cov(i ,i));
     }
     auto priorNoise = noiseModel::Diagonal::Sigmas(priorSigmas);
+    std::cout << "prior noise sigma: " << std::endl << priorSigmas << std::endl;
+    std::cout << "prior noise cov: " << std::endl << priorNoise->covariance() << std::endl;
 
     //Convert initial belief to gtsam vector
     arma::vec x0_arma = init_target_belief.get_state();
     Vector x0(x0_arma.n_elem);
     arma_vec_to_gtsam_vec(x0_arma, x0);
+
 
     // Insert prior
     newFactors.add(PriorFactor<Vector>(X(0), x0, priorNoise));
@@ -184,20 +196,30 @@ ISAMFilter::ISAMFilter(TargetLinear2DBelief init_target_belief, std::shared_ptr<
     isam.update(newFactors, initialEstimates);
     newFactors.resize(0);
     initialEstimates.clear();
+
+    std::cout << "finished constructor" << std::endl;
 };
 
 void ISAMFilter::update_belief(std::vector<arma::vec> measurements, std::vector<arma::vec> ownships)
 {
+    std::cout << "Starting udpate belief" << std::endl;
+
     //predict current from last esiamte (time step still at previous index)
     Vector last_est = isam.calculateEstimate<Vector>(X(curr_time_step));
+    std::cout << "last estimate at interation " << curr_time_step << std::endl << last_est << std::endl;
     Vector predicted(infoTarget.get_x_dim());
     predicted = last_est;  // copy
+
+    std::cout << "got last estimate" << std::endl;
 
     // Propagate target and populate predicted state
     infoTarget.forward_simulate(1);
     arma::vec x_bar_t = infoTarget.get_state();
     predicted(0) = x_bar_t(0);
     predicted(1) = x_bar_t(1);
+
+    std::cout << "prediction at interation " << curr_time_step << std::endl << predicted << std::endl;
+    std::cout << "sample interval = " << sample_interval << std::endl;
 
     // Add motion and bearing factors for this time step
     newFactors.add(boost::make_shared<MotionFactor>(X(curr_time_step), X(curr_time_step +1), sample_interval, motionNoise));
@@ -210,15 +232,33 @@ void ISAMFilter::update_belief(std::vector<arma::vec> measurements, std::vector<
     // Insert initial guess for currrent time step
     initialEstimates.insert(X(curr_time_step + 1), predicted);
 
+    /* Trying to add weak prior
+    auto weakPrior = noiseModel::Isotropic::Sigma(4, 100.0);
+    newFactors.add(PriorFactor<Vector>(
+        X(curr_time_step+1),
+        predicted,
+        weakPrior
+    ));
+    */
+
+    std::cout << "About to update ISAM" << std::endl;
+    std::cout << "Graph size: " << newFactors.size() << std::endl;
+    std::cout << "Init size: " << initialEstimates.size() << std::endl;
+    std::cout << "Factors before update:" << std::endl;
+    newFactors.print();
     //update ISAM2
     isam.update(newFactors, initialEstimates);
+
+    std::cout << "ISAM updated" << std::endl;
 
     // Clear temporaries
     newFactors.resize(0);
     initialEstimates.clear();
 
     //Retrieve estimates and update belief
+    std::cout << "about to calculate estimate" << std::endl;
     Vector est = isam.calculateEstimate<Vector>(X(curr_time_step + 1));
+    std::cout << "Estiamte retrieved" << std::endl;
     arma::vec x_t_update = gtsam_vec_to_arma_vec(est);
     Matrix cov = isam.marginalCovariance(X(curr_time_step + 1));
     arma::mat Sigma_t_update = gtsam_mat_to_arma_mat(cov);

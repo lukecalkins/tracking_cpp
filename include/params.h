@@ -143,13 +143,13 @@ public:
             double accel_dist = target_json["sigma_a"];
             arma::mat W(target_dim, target_dim, arma::fill::zeros);
             construct_process_noise_cov(W, accel_dist, sampling_period);
-            std::cout << "Noise mat W: " << std::endl << W << std::endl;
+            std::cout << "Noise mat W in tracker: " << std::endl << W << std::endl;
 
             arma::mat init_cov(target_dim, target_dim, arma::fill::zeros);
             double init_cov_pos = target_json["initial_cov_pos"];
             double init_cov_vel = target_json["initial_cov_vel"];
             construct_initial_target_covariance(init_cov, init_cov_pos, init_cov_vel);
-            std::cout << "Initial target covariance: " << std::endl << init_cov << std::endl;
+            std::cout << "Initial target covariance in tracker: " << std::endl << init_cov << std::endl;
 
             arma::vec x_init(target_dim, 1);
             std::cout << "Initial target state in tracker: " << target_json["initial_state"] << std::endl;

@@ -23,7 +23,7 @@ int main() {
 
     for (unsigned int i = 0; i < p.get_num_steps(); i++) {
         target->forward_simulate(p.get_sampling_period());
-        for (auto item : ownships) {
+        for (const auto& item : ownships) {
             measurements.push_back(sensor->get_measurement(target->get_state(), item));
         }
         tracker->update_belief(measurements, ownships);

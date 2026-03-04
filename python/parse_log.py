@@ -54,29 +54,36 @@ def read_log(log_file):
 
 if __name__ == '__main__':
     logdir = '../data/'
-    logfile = 'multi_sensor.txt'
-    video_filename = "../data/multi_sensor.gif"
+    logfile = 'multi_sensor_ISAM_middle_split_bsigma_2_asigma_0_1.txt'
+    video_filename = "../data/multi_sensor_ISAM_middle_split_bsigma_2_asigma_0_1_ nstd_2.gif"
+    title = "ISAM2 algo via GTSAM with 2 bearing-only sensors"
+    # title = "Extended Kalman Filter wiith 2 bearing-only sensors"
     fps=100
     full_file = os.path.join(logdir, logfile)
     measurements0, measurements1, target_states, ownship0_states, ownship1_states, target_belief_states, cov_belief_states = read_log(full_file)
-    print("Mean of measurmentts 0: ", np.mean(measurements0)*180./np.pi, "Std: ", np.std(measurements0)*180./np.pi)
+    print("Mean of measurments 0: ", np.mean(measurements0)*180./np.pi, "Std: ", np.std(measurements0)*180./np.pi)
     total_frames = len(measurements0)
     vid_dir = '../data/'
     vid_name = 'animation'
+    sensorSize = 10
+    targetSize = 10
+    targetEstimateSize = 15
 
     # Artist animation
     fig, ax = plt.subplots()
     bearing_points = np.linspace(0,100, 100)
-    ownship0_point = ax.plot(ownship0_states[0][0], ownship0_states[0][1], 'b.', label='sensor0')[0]
-    bearing0_line = ax.plot(ownship0_states[0][0] + bearing_points*np.cos(measurements0[0]), ownship0_states[0][1] + bearing_points*np.sin(measurements0[0]), 'g--', label='Measurement0')[0]
-    ownship1_point = ax.plot(ownship1_states[0][0], ownship1_states[0][1], 'b.', label='sensor1')[0]
-    bearing1_line = ax.plot(ownship1_states[0][0] + bearing_points*np.cos(measurements1[0]), ownship1_states[0][1] + bearing_points*np.sin(measurements1[0]), 'g--', label='Measurement1')[0]
-    target_point = ax.plot(target_states[0][0], target_states[0][1], 'g.', label='Target')[0]
-    target_belief_point = ax.plot(target_belief_states[0][0], target_belief_states[0][1], 'rx', label='Target estimate')[0]
+    ownship0_point = ax.plot(ownship0_states[0][0], ownship0_states[0][1], 'b+', label='sensor0', markersize=sensorSize)[0]
+    bearing0_line = ax.plot(ownship0_states[0][0] + bearing_points*np.cos(measurements0[0]), ownship0_states[0][1] + bearing_points*np.sin(measurements0[0]), 'b--', label='Measurement0')[0]
+    ownship1_point = ax.plot(ownship1_states[0][0], ownship1_states[0][1], 'm+', label='sensor1', markersize=sensorSize)[0]
+    bearing1_line = ax.plot(ownship1_states[0][0] + bearing_points*np.cos(measurements1[0]), ownship1_states[0][1] + bearing_points*np.sin(measurements1[0]), 'm--', label='Measurement1')[0]
+    target_belief_point = ax.plot(target_belief_states[0][0], target_belief_states[0][1], 'rx', label='Target estimate', markersize=targetEstimateSize)[0]
     ellipse_init = get_cov_ellipse(target_belief_states[0], cov_belief_states[0])
     cov_ellipse = ax.add_patch(ellipse_init.get_ellipse())
-    ax.set(xlim=[-1, 101], ylim=[-1, 40], xlabel='x', ylabel='y')
-    ax.legend(loc='upper left')
+    target_point = ax.plot(target_states[0][0], target_states[0][1], 'g.', label='Target', markersize=targetSize)[0]
+
+    ax.set(xlim=[-10, 70], ylim=[-40, 40], xlabel='x', ylabel='y')
+    ax.set_title(title)
+    ax.legend(loc='upper right')
 
     def update(frame):
         # for each frame, update the data stored on each artist.
