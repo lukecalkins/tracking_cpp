@@ -15,6 +15,8 @@ void UnscentedKalmanFilter::update_belief(std::vector<arma::vec> measurements, s
      W_0_a = W_0_c
      W_i_a = W_i_c, i = 1,...,2L
      */
+    std::cout << "Inside update belief" << std::endl;
+
     //compute sigma points
     arma::vec s_0 = infoTarget.get_state();
     double L = infoTarget.get_x_dim();
@@ -23,7 +25,12 @@ void UnscentedKalmanFilter::update_belief(std::vector<arma::vec> measurements, s
     arma::mat P_0 = infoTarget.get_cov();
     arma::mat Q = infoTarget.get_process_noise_covariance();
     unsigned int z_dim = sensor->get_z_dim();
-    arma::mat R = sensor->get_measurement_covariance();
+    const unsigned int num_sensors = ownships.size();
+    arma::mat R(z_dim * num_sensors, z_dim * num_sensors, arma::fill::zeros);
+    for (int i = 0; i < num_sensors; i++) {
+        R.submat(i, i, i, i) = sensor->get_measurement_covariance(); //TODO include meas dimension
+    }
+
 
     //Compute square root of prior covariance mat
     arma::mat A = arma::sqrtmat_sympd(P_0);
@@ -59,12 +66,16 @@ void UnscentedKalmanFilter::update_belief(std::vector<arma::vec> measurements, s
 
     // ***** Update ****** //
     //Compute 2L + 1 measurements of sigma points
-    arma::vec z_predict(z_dim, arma::fill::zeros);
-    arma::vec sigmaMeasurementsPredict(2*L + 1, arma::fill::zeros);
-    arma::mat S_k(z_dim, z_dim, arma::fill::zeros);
+    arma::vec z_predict(num_sensors  * z_dim, arma::fill::zeros);
+    arma::mat sigmaMeasurementsPredict(num_sensors * z_dim, 2*L + 1, arma::fill::zeros);
+    arma::mat S_k(z_dim * num_sensors, z_dim * num_sensors, arma::fill::zeros);
     for (int i = 0; i < 2*L + 1; i++) {
-        arma::vec sigmaMeasurement = sensor->observation_model(sigmaVecsPredict.col(i), ownships[i]); //TODO fix ownship
-        sigmaMeasurementsPredict(i) = sigmaMeasurement(0);
+        for (int j=0; j < ownships.size(); j++) {
+            sigmaMeasurementsPredict.submat(j, i, j + z_dim - 1, i) =
+                sensor->observation_model(sigmaVecsPredict.col(i), ownships[j]);
+        }
+        //arma::vec sigmaMeasurement = sensor->observation_model(sigmaVecsPredict.col(i), ownships[i]); //TODO fix ownship
+        //sigmaMeasurementsPredict(i) = sigmaMeasurement(0);
         z_predict += W_a(i) * sigmaMeasurementsPredict(i);
     }
     for (int i = 0; i < 2*L + 1; i++) {
@@ -73,7 +84,7 @@ void UnscentedKalmanFilter::update_belief(std::vector<arma::vec> measurements, s
     S_k += R;
 
     //Compute Cross covariance matrix
-    arma::mat C_xz(L, z_dim, arma::fill::zeros);
+    arma::mat C_xz(L, num_sensors * z_dim, arma::fill::zeros);
     for (int i = 0; i < 2*L + 1; i++) {
         C_xz += W_c(i) * (sigmaVecsPredict.col(i) - x_k_predict) * (sigmaMeasurementsPredict(i) - z_predict).t();
     }
@@ -81,8 +92,14 @@ void UnscentedKalmanFilter::update_belief(std::vector<arma::vec> measurements, s
     //Kalman Gain
     arma::mat K_k = C_xz * arma::inv(S_k);
 
+    //Unravel measurements into one vector
+    arma::vec measVec(z_dim * num_sensors, arma::fill::zeros);
+    for (int i = 0; i < measurements.size(); i++) {
+        measVec.subvec(i*z_dim,i*z_dim + z_dim - 1) = measurements[i];
+    }
+
     // final update
-    arma::vec x_k_update = x_k_predict + K_k *(measurements[0] - z_predict); //TODO fix measurements
+    arma::vec x_k_update = x_k_predict + K_k *(measVec - z_predict); //TODO fix measurements
     arma::mat P_k_update = cov_predict + - K_k * S_k * K_k.t();
 
     infoTarget.update_belief(x_k_update, P_k_update);
