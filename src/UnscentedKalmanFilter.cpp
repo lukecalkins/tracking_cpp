@@ -30,6 +30,9 @@ void UnscentedKalmanFilter::update_belief(std::vector<arma::vec> measurements, s
     for (int i = 0; i < num_sensors; i++) {
         R.submat(i, i, i, i) = sensor->get_measurement_covariance(); //TODO include meas dimension
     }
+    std::cout << "P_0: " << std::endl << P_0 << std::endl;
+    std::cout << "Q: " << std::endl << Q << std::endl;
+    std::cout << "R: " << std::endl << R << std::endl;
 
 
     //Compute square root of prior covariance mat
@@ -99,9 +102,12 @@ void UnscentedKalmanFilter::update_belief(std::vector<arma::vec> measurements, s
     }
 
     // final update
-    arma::vec x_k_update = x_k_predict + K_k *(measVec - z_predict); //TODO fix measurements
+    arma::vec innovation = measVec - z_predict;
+    std::cout << "Innovation: " << std::endl <<  innovation << std::endl;
+    arma::vec x_k_update = x_k_predict + K_k * innovation; //TODO fix measurements
     arma::mat P_k_update = cov_predict + - K_k * S_k * K_k.t();
 
     infoTarget.update_belief(x_k_update, P_k_update);
+    std::cout << "done at timestep: " << curr_time_step << std::endl;
     curr_time_step += 1;
 }
