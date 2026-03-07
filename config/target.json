@@ -2,7 +2,7 @@
   "target type": "linear_2d",
   "target_dim": 4,
   "initial_state": [25, 30, 0, -1],
-  "initial_cov_pos": 50,
+  "initial_cov_pos": 1000,
   "initial_cov_vel": 1,
   "sigma_a" : 0.1
 }
