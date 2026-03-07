@@ -30,6 +30,7 @@ void KalmanFilter::update_belief(std::vector<arma::vec> measurements, std::vecto
         H.submat(i, 0, i, target_dim - 1) = H_temp;
         V.submat(i, i, i, i) = V_temp;
     }
+    std::cout << "Measurement covariance:" << std::endl << V << std::endl;
 
     //build multi sensor innovation
     arma::vec innovation(z_dim * num_sensors, arma::fill::zeros);

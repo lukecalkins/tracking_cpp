@@ -55,7 +55,7 @@ def read_log(log_file):
 if __name__ == '__main__':
     logdir = '../data/'
     logfile = 'multi_sensor_UKF_middle_split_bsigma_2_asigma_0_1.txt'
-    video_filename = "../data/multi_sensor_UKF_middle_split_bsigma_2_asigma_0_1_ nstd_2.gif"
+    video_filename = "../data/multi_sensor_UKF_middle_split_bsigma_2_asigma_0_1_nstd_2.gif"
     title = "Unnscented Kalman Filter with 2 bearing-only sensors"
     # title = "Extended Kalman Filter wiith 2 bearing-only sensors"
     fps=100

@@ -46,7 +46,7 @@ class BearingSensor final : public Sensor {
 
 public:
     explicit BearingSensor(const double b_sigma, bool logging = false) : Sensor(1),
-                                                   b_sigma(b_sigma),
+                                                   b_sigma(b_sigma * M_PI / 180),
                                                    distribution(0, b_sigma * M_PI / 180),
                                                    generator(std::random_device{}()),
                                                    logging(logging){}
